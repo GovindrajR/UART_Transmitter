@@ -23,7 +23,7 @@ Stop Bit: 1 clock cycle HIGH to conclude the frame.
 2. Architecture & Datapath Separation
 
 To ensure clean synthesis and prevent timing violations, the architecture strictly separates the Control Unit (FSM) from the Datapath (Registers/Counters). The FSM acts as the "brain," sending control signals to the "muscle."
-
+```mermaid
 graph TD
     subgraph UART_TX_CORE [UART Transmitter IP Core]
         direction TB
@@ -53,12 +53,13 @@ graph TD
         FSM -- tx_busy --> BUSY([tx_busy])
         SHIFT -- LSB --> TX_OUT([tx_out])
     end
+```
 
 
 3. Micro-Architecture (Finite State Machine)
 
 The Control Unit is implemented as a 4-state Moore/Mealy hybrid machine. Below is the exact signal flow and state transition graph used to code the Next-State logic:
-
+```mermaid
 stateDiagram-v2
     [*] --> IDLE
     
@@ -71,7 +72,7 @@ stateDiagram-v2
     DATA --> STOP : bit_count = 7
     
     STOP --> IDLE : Auto-transition\ntx_out = 1
-
+```
 
 📊 Verification (Testbench)
 
