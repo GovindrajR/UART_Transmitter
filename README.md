@@ -24,35 +24,48 @@ Stop Bit: 1 clock cycle HIGH to conclude the frame.
 
 To ensure clean synthesis and prevent timing violations, the architecture strictly separates the Control Unit (FSM) from the Datapath (Registers/Counters). The FSM acts as the "brain," sending control signals to the "muscle."
 ```mermaid
-graph TD
-    subgraph UART_TX_CORE [UART Transmitter IP Core]
-        direction TB
+graph LR
+    subgraph UART_Transmitter_IP_Core [UART Transmitter IP Core]
+        direction LR
         
-        %% External Inputs
-        clk((clk))
-        tx_enable([tx_enable])
-        tx_data[/tx_data 7:0/]
+        subgraph Inputs
+            clk((clk))
+            tx_enable([tx_enable])
+            tx_data[/tx_data 7:0/]
+        end
         
-        %% Internal Blocks
-        FSM{Control Unit FSM}
-        SHIFT[8-Bit Shift Register]
-        COUNT[3-Bit Counter]
+        subgraph Control_Unit [Control Unit]
+            FSM{FSM Controller}
+        end
         
-        %% Connections
+        subgraph Datapath [Datapath]
+            SHIFT[8-Bit Shift Register]
+            COUNT[3-Bit Counter]
+        end
+        
+        subgraph Outputs
+            BUSY([tx_busy])
+            TX_OUT([tx_out])
+        end
+        
+        %% Data Flow (Thick Arrows)
+        tx_data ==> SHIFT
+        SHIFT == LSB ==> TX_OUT
+        
+        %% Control Flow
         tx_enable --> FSM
-        tx_data --> SHIFT
+        FSM -- tx_busy --> BUSY
         
+        %% Internal Command Wires (FSM -> Datapath)
         FSM -- load_data --> SHIFT
         FSM -- shift_en --> SHIFT
         FSM -- clear_counter --> COUNT
         FSM -- inc_counter --> COUNT
         
+        %% Feedback (Datapath -> FSM)
         COUNT -- bit_count == 7 --> FSM
-        
-        %% External Outputs
-        FSM -- tx_busy --> BUSY([tx_busy])
-        SHIFT -- LSB --> TX_OUT([tx_out])
     end
+
 ```
 
 
@@ -61,17 +74,36 @@ graph TD
 The Control Unit is implemented as a 4-state Moore/Mealy hybrid machine. Below is the exact signal flow and state transition graph used to code the Next-State logic:
 ```mermaid
 stateDiagram-v2
+    direction LR
     [*] --> IDLE
     
-    IDLE --> IDLE : tx_enable = 0\ntx_out = 1
+    IDLE --> IDLE : tx_enable = 0
     IDLE --> START : tx_enable = 1\n(Assert load_data)
     
-    START --> DATA : Auto-transition\ntx_out = 0\n(Assert clear_counter)
+    START --> DATA : Auto-transition\n(Assert clear_counter)
     
-    DATA --> DATA : bit_count < 7\ntx_out = Shift_Reg[0]\n(Assert shift_en, inc_counter)
+    DATA --> DATA : bit_count < 7\n(Assert shift_en, inc_counter)
     DATA --> STOP : bit_count = 7
     
-    STOP --> IDLE : Auto-transition\ntx_out = 1
+    STOP --> IDLE : Auto-transition
+    
+    %% State Output Definitions
+    IDLE : IDLE State
+    IDLE : tx_out = 1
+    IDLE : tx_busy = 0
+    
+    START : START State
+    START : tx_out = 0
+    START : tx_busy = 1
+    
+    DATA : DATA State
+    DATA : tx_out = Shift_Reg[0]
+    DATA : tx_busy = 1
+    
+    STOP : STOP State
+    STOP : tx_out = 1
+    STOP : tx_busy = 1
+
 ```
 
 📊 Verification (Testbench)
@@ -101,4 +133,4 @@ Timing Analysis
 
 Because the datapath relies entirely on direct register shifts and a minimal 3-bit counter, the combinational delay ($T_{comb}$) is negligible. With standard XDC constraints, this core is capable of closing timing at $>100$ MHz.
 
-Designed by [Your Name] | Built for VLSI/Embedded Hardware Portfolio
+Designed by Govindraj R | Built for VLSI/Embedded Hardware Portfolio
