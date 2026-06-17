@@ -1,14 +1,14 @@
-UART Transmitter (8-N-1) IP Core
+# UART Transmitter (8-N-1) IP Core
 
-📌 Project Overview
+## 📌 Project Overview
 
 This repository contains the complete RTL design, verification, and synthesis of a parameterized UART Transmitter IP Core.
 
 As my first formal VLSI project, I focused heavily on adhering to a professional hardware engineering lifecycle—moving strictly from protocol specification to micro-architecture, and finally to RTL implementation and Static Timing Analysis (STA).
 
-⚙️ The Engineering Process
+## ⚙️ The Engineering Process
 
-1. Specification & Requirements
+### 1. Specification & Requirements
 
 The goal was to design an asynchronous serial transmitter adhering to the standard UART 8-N-1 protocol:
 
@@ -20,7 +20,7 @@ Data Payload: 8 bits transmitted sequentially, Least Significant Bit (LSB) first
 
 Stop Bit: 1 clock cycle HIGH to conclude the frame.
 
-2. Architecture & Datapath Separation
+### 2. Architecture & Datapath Separation
 
 To ensure clean synthesis and prevent timing violations, the architecture strictly separates the Control Unit (FSM) from the Datapath (Registers/Counters). The FSM acts as the "brain," sending control signals to the "muscle."
 ```mermaid
@@ -69,7 +69,7 @@ graph LR
 ```
 
 
-3. Micro-Architecture (Finite State Machine)
+### 3. Micro-Architecture (Finite State Machine)
 
 The Control Unit is implemented as a 4-state Moore/Mealy hybrid machine. Below is the exact signal flow and state transition graph used to code the Next-State logic:
 ```mermaid
@@ -106,7 +106,7 @@ stateDiagram-v2
 
 ```
 
-📊 Verification (Testbench)
+## 📊 Verification (Testbench)
 
 The RTL was verified using a self-checking testbench in Xilinx Vivado.
 
@@ -114,23 +114,32 @@ Test Scenario: Transmitting the hex payload 8'hA5 (Binary: 10100101).
 As shown in the waveform below, the FSM successfully pulls the line LOW for the START bit, shifts the alternating bits (1-0-1-0-0-1-0-1) LSB-first, and pulls the line HIGH for the STOP bit.
 
 ![Waveform](https://github.com/GovindrajR/UART_Transmitter/blob/main/waveform.png?raw=true)
-![Utilization Report](https://github.com/GovindrajR/UART_Transmitter/blob/main/utilizaton%20summary.png?raw=true)
+![Utilization Report](https://github.com/GovindrajR/UART_Transmitter/blob/main/utilization%20summary.png?raw=true)
 ![Power Report](https://github.com/GovindrajR/UART_Transmitter/blob/main/power%20report.png?raw=true)
+![Timing summary](https://github.com/GovindrajR/UART_Transmitter/blob/main/timing%20summary.png?raw=true)
 
-📈 Synthesis & Implementation Results
+## 📈 Synthesis & Implementation Results
 
-The design was synthesized in Xilinx Vivado. The explicit Datapath-Control separation resulted in a highly optimized, lightweight logic footprint with zero latches.
+The design was synthesized and implemented in Xilinx Vivado. By applying a standard .xdc constraint file, the tool heavily optimized the logic, resulting in an incredibly lightweight and low-power footprint.
 
-Resource Utilization
+### Resource Utilization & Power
 
-LUTs: 15 (0.01%)
+LUTs: 14 (0.01%)
 
 Registers (Flip-Flops): 15 (0.01%)
 
-Total On-Chip Power: 0.376 W (Dynamic: 0.244 W)
+Total On-Chip Power: 0.132 W (Dynamic Power virtually negligible at 0.001 W)
 
-Timing Analysis
+Timing Analysis (STA)
 
-Because the datapath relies entirely on direct register shifts and a minimal 3-bit counter, the combinational delay ($T_{comb}$) is negligible. With standard XDC constraints, this core is capable of closing timing at $>100$ MHz.
+The design was constrained to a 100 MHz system clock (10.000 ns period) using a Xilinx Design Constraint (XDC) file.
+
+Because the datapath relies entirely on direct register shifts and a minimal 3-bit counter, the combinational delay ($T_{comb}$) is negligible.
+
+Worst Negative Slack (WNS): +7.896 ns
+
+Worst Hold Slack (WHS): +0.195 ns
+
+Status: Clean timing closure achieved. The massive positive slack indicates this IP core can safely run at frequencies far exceeding 100 MHz if required by the parent system.
 
 Designed by Govindraj R | Built for VLSI/Embedded Hardware Portfolio
