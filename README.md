@@ -80,7 +80,9 @@ The RTL was verified using a self-checking testbench in Xilinx Vivado.
 Test Scenario: Transmitting the hex payload 8'hA5 (Binary: 10100101).
 As shown in the waveform below, the FSM successfully pulls the line LOW for the START bit, shifts the alternating bits (1-0-1-0-0-1-0-1) LSB-first, and pulls the line HIGH for the STOP bit.
 
-![Waveform]()
+![Waveform](https://github.com/GovindrajR/UART_Transmitter/blob/main/waveform.png?raw=true)
+![Utilization Report](https://github.com/GovindrajR/UART_Transmitter/blob/main/utilizaton%20summary.png?raw=true)
+![Power Report](https://github.com/GovindrajR/UART_Transmitter/blob/main/power%20report.png?raw=true)
 
 📈 Synthesis & Implementation Results
 
